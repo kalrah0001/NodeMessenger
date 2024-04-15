@@ -1,0 +1,4 @@
+{
+  "watch": ["*", "!node_modules/**"],
+  "ext": "js,json,ejs,css"
+}

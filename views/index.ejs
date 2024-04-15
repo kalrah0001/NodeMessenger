@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Realtime Chat</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
+    <style>
+      .message-container {
+        max-width: 80%;
+      }
+      .sent {
+        justify-content: flex-end;
+      }
+      .received {
+        justify-content: flex-start;
+      }
+      #input:focus {
+        outline: none;
+      }
+    </style>
+  </head>
+  <body class="bg-gray-900 text-white flex flex-col h-screen">
+    <div class="flex-1 p-4 overflow-y-auto">
+      <div id="messages" class="mb-4"></div>
+    </div>
+    <form id="form" class="flex items-center p-4" action="">
+      <input
+        id="input"
+        autocomplete="off"
+        class="flex-1 rounded-l-lg px-4 py-2 bg-gray-800"
+        placeholder="Type a message..."
+      />
+      <button id="submit-btn" class="rounded-r-lg px-4 py-2 bg-gray-700">
+        <i class="fas fa-paper-plane"></i>
+      </button>
+    </form>
+    <script src="https://cdn.jsdelivr.net/npm/socket.io-client/dist/socket.io.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+    <script>
+      const socket = io();
+      const form = document.getElementById("form");
+      const input = document.getElementById("input");
+      const messages = document.getElementById("messages");
+      const userId = Math.random().toString(36).substring(7);
+      form.addEventListener("submit", (e) => {
+        e.preventDefault();
+        if (input.value) {
+          const message = {
+            text: input.value,
+            userId,
+            timestamp: moment().format("YYYY-MM-DD HH:mm:ss"),
+          };
+          socket.emit("message", message);
+          input.value = "";
+        }
+      });
+
+      socket.on("message", (message) => {
+        const item = document.createElement("div");
+        item.classList.add("flex", "items-start", "mb-4", "max-w-md");
+
+        const messageContainer = document.createElement("div");
+        messageContainer.classList.add(
+          "message-container",
+          "bg-gray-800",
+          "rounded-lg",
+          "p-2"
+        );
+
+        const senderName = document.createElement("div");
+        senderName.textContent =
+          message.userId === userId ? "You" : message.userId;
+        senderName.classList.add("text-xs", "text-gray-500", "mb-1");
+
+        const messageContent = document.createElement("div");
+        messageContent.textContent = message.text;
+        messageContent.classList.add("text-sm");
+
+        const messageTime = document.createElement("span");
+        messageTime.textContent = moment(message.timestamp).format("HH:mm");
+        messageTime.classList.add("text-xs", "text-gray-500", "ml-5");
+
+        messageContent.appendChild(messageTime);
+        messageContainer.appendChild(senderName);
+        messageContainer.appendChild(messageContent);
+
+        item.appendChild(messageContainer);
+
+        if (message.userId === userId) {
+          item.classList.add("justify-end", "ml-auto");
+        } else {
+          item.classList.add("justify-start");
+        }
+
+        messages.appendChild(item);
+        messages.scrollTop = messages.scrollHeight;
+      });
+    </script>
+  </body>
+</html>
